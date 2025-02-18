@@ -1,9 +1,14 @@
-
 import numpy as np
 
 
 class CameraManager():
     def __init__(self, camera_id):
+        """
+        Initialize the CameraManager with a camera ID.
+
+        Args:
+            camera_id (str): The ID of the camera.
+        """
         self._camera_id = camera_id
         self._w2c = None
         self._c2w = None
@@ -18,13 +23,20 @@ class CameraManager():
     @property
     def camera_id(self) -> str:
         """
-        Get the camera id
+        Get the camera ID.
+
+        Returns:
+            str: The ID of the camera.
         """
         return self._camera_id
 
     def setup(self, w2c: np.ndarray, intrinsics: np.ndarray) -> None:
         """
-        One function to do all the setup
+        Set up the camera with the given world-to-camera transformation matrix and intrinsics.
+
+        Args:
+            w2c (np.ndarray): The world-to-camera transformation matrix.
+            intrinsics (np.ndarray): The camera intrinsics matrix.
         """
         self.set_w2c(w2c)
         self.set_c2w()
@@ -32,7 +44,14 @@ class CameraManager():
     
     def set_w2c(self, w2c: np.ndarray) -> None:
         """
-        Set the world to camera transformation matrix
+        Set the world-to-camera transformation matrix.
+
+        Args:
+            w2c (np.ndarray): The world-to-camera transformation matrix.
+
+        Raises:
+            ValueError: If w2c is not a 4x4 matrix.
+            TypeError: If w2c is not a numpy array.
         """
         if w2c.shape != (4, 4):
             raise ValueError(f'w2c must be a 4x4 matrix, got {w2c.shape}')
@@ -44,7 +63,13 @@ class CameraManager():
     @property
     def w2c(self) -> np.ndarray:
         """
-        Get the world to camera transformation matrix
+        Get the world-to-camera transformation matrix.
+
+        Returns:
+            np.ndarray: The world-to-camera transformation matrix.
+
+        Raises:
+            AttributeError: If w2c is not set.
         """
         if self._w2c is None:
             raise AttributeError('w2c is not set')
@@ -52,7 +77,14 @@ class CameraManager():
 
     def set_intrinsics(self, intrinsics: np.ndarray) -> None:
         """
-        Set the camera intrinsics matrix
+        Set the camera intrinsics matrix.
+
+        Args:
+            intrinsics (np.ndarray): The camera intrinsics matrix.
+
+        Raises:
+            ValueError: If intrinsics is not a 3x3 matrix.
+            TypeError: If intrinsics is not a numpy array.
         """
         if intrinsics.shape != (3, 3):
             raise ValueError(f'intrinsics must be a 3x3 matrix, got {intrinsics.shape}')
@@ -64,7 +96,13 @@ class CameraManager():
     @property
     def intrinsics(self) -> np.ndarray:
         """
-        Get the camera intrinsics matrix
+        Get the camera intrinsics matrix.
+
+        Returns:
+            np.ndarray: The camera intrinsics matrix.
+
+        Raises:
+            AttributeError: If intrinsics is not set.
         """
         if self._intrinsics is None:
             raise AttributeError('intrinsics is not set')
@@ -72,7 +110,15 @@ class CameraManager():
     
     def set_c2w(self, c2w=None) -> None:
         """
-        Set the camera to world transformation matrix
+        Set the camera-to-world transformation matrix.
+
+        Args:
+            c2w (np.ndarray, optional): The camera-to-world transformation matrix. If not provided, it will be calculated as the inverse of w2c.
+
+        Raises:
+            ValueError: If w2c is not set and c2w is not provided.
+            TypeError: If c2w is not a numpy array.
+            ValueError: If c2w is not a 4x4 matrix.
         """
         if c2w is None:
             if self._w2c is None:
@@ -91,9 +137,14 @@ class CameraManager():
     @property
     def c2w(self) -> np.ndarray:
         """
-        Get the camera to world transformation matrix
+        Get the camera-to-world transformation matrix.
+
+        Returns:
+            np.ndarray: The camera-to-world transformation matrix.
+
+        Raises:
+            AttributeError: If c2w is not set.
         """
         if self._c2w is None:
             raise AttributeError('c2w is not set')
         return self._c2w
-    
