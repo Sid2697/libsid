@@ -86,10 +86,10 @@ class CameraManager():
             ValueError: If intrinsics is not a 3x3 matrix.
             TypeError: If intrinsics is not a numpy array.
         """
-        if intrinsics.shape != (3, 3):
-            raise ValueError(f'intrinsics must be a 3x3 matrix, got {intrinsics.shape}')
         if not isinstance(intrinsics, np.ndarray):
             raise TypeError(f'Expected intrinsics as numpy array, got {type(intrinsics)}')
+        if intrinsics.shape != (3, 3):
+            raise ValueError(f'intrinsics must be a 3x3 matrix, got {intrinsics.shape}')
         self._intrinsics = intrinsics
         self.params['intrinsics'] = intrinsics
     
