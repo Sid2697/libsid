@@ -15,6 +15,15 @@ class Py3DVisualiser():
             device: str = 'cpu',
             projection: str = 'perspective',
     ):
+        """
+        Initialize the Py3DVisualiser with image dimensions, device, and projection type.
+
+        Args:
+            img_height (int): The height of the image.
+            img_width (int): The width of the image.
+            device (str): The device to use ('cpu' or 'cuda').
+            projection (str): The type of projection ('perspective' or 'orthographic').
+        """
         self.img_height = img_height
         self.img_width = img_width
         self.device = device
@@ -26,6 +35,16 @@ class Py3DVisualiser():
             mesh_path: str,
             verts_scale: float = 1,
         ):
+        """
+        Add an object to the scene from a mesh file.
+
+        Args:
+            mesh_path (str): The path to the mesh file.
+            verts_scale (float): The scale factor for the vertices.
+
+        Raises:
+            FileNotFoundError: If the mesh file is not found.
+        """
         if not os.path.isfile(mesh_path):
             raise FileNotFoundError(f'Mesh file not found: {mesh_path}')
         mesh = py3dio.load_objs_as_meshes([mesh_path], device=self.device)
@@ -37,6 +56,16 @@ class Py3DVisualiser():
             obj_R: torch.tensor,
             obj_T: torch.tensor,
         ):
+        """
+        Transform the object in the scene using rotation and translation matrices.
+
+        Args:
+            obj_R (torch.tensor): The 3x3 rotation matrix.
+            obj_T (torch.tensor): The 3x1 translation vector.
+
+        Raises:
+            NotImplementedError: If there is more than one object in the scene.
+        """
         if len(self.scene_objects) > 1:
             raise NotImplementedError('Current implementation assumes one object in the scene')
         obj_R = obj_R.to(torch.float32).to(self.device)
@@ -59,7 +88,10 @@ class Py3DVisualiser():
         Returns a Pytorch3D Mesh Renderer.
 
         Args:
-            lights: A default Pytorch3D lights object.
+            lights (Optional[py3drend.PointLights]): A default Pytorch3D lights object.
+
+        Returns:
+            py3drend.MeshRenderer: The mesh renderer.
         """
         raster_settings = py3drend.RasterizationSettings(
                 image_size=(self.img_height, self.img_width),
@@ -76,6 +108,15 @@ class Py3DVisualiser():
             self,
             mesh: py3d.structures.Meshes,
         ) -> py3d.structures.Meshes:
+        """
+        Apply a simple texture to the mesh.
+
+        Args:
+            mesh (py3d.structures.Meshes): The mesh to be textured.
+
+        Returns:
+            py3d.structures.Meshes: The textured mesh.
+        """
         vertices = mesh.verts_list()[0].to(torch.float32).unsqueeze(0).to(self.device)
         faces = mesh.faces_list()[0].to(torch.float32).unsqueeze(0).to(self.device)
         textures = torch.ones_like(vertices, dtype=torch.float32).to(self.device)
@@ -91,6 +132,18 @@ class Py3DVisualiser():
             self,
             intrinsic: torch.tensor,
         ) -> torch.tensor:
+        """
+        Extend the intrinsic matrix to a 4x4 matrix for perspective projection.
+
+        Args:
+            intrinsic (torch.tensor): The 3x3 intrinsic matrix.
+
+        Returns:
+            torch.tensor: The extended 4x4 intrinsic matrix.
+
+        Raises:
+            NotImplementedError: If the projection type is not 'perspective'.
+        """
         extended_K = torch.zeros(4, 4).to(self.device)
         if self.projection == 'perspective':
             extended_K[:3, :3] = intrinsic.to(torch.float32).to(self.device)
@@ -107,6 +160,17 @@ class Py3DVisualiser():
             cam_T: torch.tensor,
             intrinsic: torch.tensor,
         ):
+        """
+        Render the object in the scene using the camera parameters.
+
+        Args:
+            cam_R (torch.tensor): The 3x3 camera rotation matrix.
+            cam_T (torch.tensor): The 3x1 camera translation vector.
+            intrinsic (torch.tensor): The 3x3 intrinsic matrix.
+
+        Raises:
+            NotImplementedError: If there is more than one object in the scene.
+        """
         if len(self.scene_objects) > 1:
             raise NotImplementedError('Current implementation assumes one object in the scene')
         mesh = self.scene_objects[0]
