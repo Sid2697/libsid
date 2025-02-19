@@ -12,7 +12,12 @@ authors = [
     {name = "Siddhant Bansal", email = "siddhant2697@gmail.com"}
 ]
 dependencies = [
-    "torch>=2.6.0",
     "numpy>=1.26.4",
     "matplotlib>=3.8.4",
+    "open3d>=0.18.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "torch>=2.6.0",
 ]

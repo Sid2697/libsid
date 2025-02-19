@@ -8,9 +8,9 @@ class PyTorchOpen3D:
 
                 z
                 ↑
-                /   
-                /  
-            /   
+               /   
+              /  
+             /   
             +------→ x
             |
             |
