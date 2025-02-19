@@ -1,8 +1,14 @@
 import numpy as np
+from typing import Optional
 
 
 class CameraManager():
-    def __init__(self, camera_id):
+    def __init__(
+            self,
+            camera_id: str,
+            w2c: Optional[np.ndarray] = None,
+            intrinsics: Optional[np.ndarray] = None,
+    ):
         """
         Initialize the CameraManager with a camera ID.
 
@@ -10,15 +16,16 @@ class CameraManager():
             camera_id (str): The ID of the camera.
         """
         self._camera_id = camera_id
-        self._w2c = None
-        self._c2w = None
-        self._intrinsics = None
-        self.params = {
-            'id': camera_id,
-            'w2c': None,
-            'c2w': None,
-            'intrinsics': None,
-        }
+        if w2c is not None:
+            self.set_w2c(w2c)
+            self.set_c2w()
+        else:
+            self._w2c = None
+            self._c2w = None
+        if intrinsics is not None:
+            self.set_intrinsics(intrinsics)
+        else:
+            self._intrinsics = None
     
     @property
     def camera_id(self) -> str:
@@ -58,7 +65,6 @@ class CameraManager():
         if not isinstance(w2c, np.ndarray):
             raise TypeError(f'Expected w2c as numpy array, got {type(w2c)}')
         self._w2c = w2c
-        self.params['w2c'] = w2c
     
     @property
     def w2c(self) -> np.ndarray:
@@ -91,7 +97,6 @@ class CameraManager():
         if intrinsics.shape != (3, 3):
             raise ValueError(f'intrinsics must be a 3x3 matrix, got {intrinsics.shape}')
         self._intrinsics = intrinsics
-        self.params['intrinsics'] = intrinsics
     
     @property
     def intrinsics(self) -> np.ndarray:
@@ -131,8 +136,6 @@ class CameraManager():
                 raise ValueError(f'c2w must be a 4x4 matrix, got {c2w.shape}')
             self._c2w = c2w
             self._w2c = np.linalg.inv(c2w)
-            self.params['w2c'] = self._w2c
-        self.params['c2w'] = self._c2w
     
     @property
     def c2w(self) -> np.ndarray:
