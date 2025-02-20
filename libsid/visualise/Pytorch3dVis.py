@@ -51,8 +51,37 @@ class Py3DVisualiser():
         mesh.verts_list()[0] = mesh.verts_list()[0] / verts_scale
         self.scene_objects.append(mesh)
 
+    def add_mesh(
+            self,
+            vertices: torch.tensor,
+            faces: torch.tensor,
+            verts_scale: float = 1,
+        ):
+        """
+        Adds a mesh to the scene.
+
+        Args:
+            vertices (torch.Tensor): A tensor containing the vertices of the mesh.
+            faces (torch.Tensor): A tensor containing the faces of the mesh.
+            verts_scale (float, optional): A scaling factor for the vertices. Defaults to 1.
+
+        Raises:
+            ValueError: If `vertices` is not a torch.Tensor.
+            ValueError: If `faces` is not a torch.Tensor.
+        """
+        if not isinstance(vertices, torch.Tensor):
+            raise ValueError(f'Expected vertices as torch tensor, got {type(vertices)}')
+        if not isinstance(faces, torch.Tensor):
+            raise ValueError(f'Expected faces as torch tensor, got {type(faces)}')
+        mesh = py3d.structures.Meshes(
+            verts=[vertices / verts_scale],
+            faces=[faces],
+        )
+        self.scene_objects.append(mesh)
+
     def transform_obj(
             self,
+            obj_id: int,
             obj_R: torch.tensor,
             obj_T: torch.tensor,
         ):
@@ -60,17 +89,17 @@ class Py3DVisualiser():
         Transform the object in the scene using rotation and translation matrices.
 
         Args:
+            obj_id (int): The index of the object in the scene (the order in which meshes were added).
             obj_R (torch.tensor): The 3x3 rotation matrix.
             obj_T (torch.tensor): The 3x1 translation vector.
-
-        Raises:
-            NotImplementedError: If there is more than one object in the scene.
         """
         if len(self.scene_objects) > 1:
-            raise NotImplementedError('Current implementation assumes one object in the scene')
+            obj_id = obj_id
+        else:
+            obj_id = 0
+        mesh = self.scene_objects[obj_id]
         obj_R = obj_R.to(torch.float32).to(self.device)
         obj_T = obj_T.to(torch.float32).to(self.device)
-        mesh = self.scene_objects[0]
         obj_verts_transformed = torch.matmul(
             mesh.verts_list()[0].to(torch.float32),
             obj_R.T,
@@ -79,7 +108,7 @@ class Py3DVisualiser():
             verts=[obj_verts_transformed],
             faces=[mesh.faces_list()[0]],
         )
-        self.scene_objects[0] = obj_mesh
+        self.scene_objects[obj_id] = obj_mesh
 
     def get_mesh_renderer(
                 self, lights: Optional[py3drend.PointLights] = None
@@ -159,7 +188,7 @@ class Py3DVisualiser():
             cam_R: torch.tensor,
             cam_T: torch.tensor,
             intrinsic: torch.tensor,
-        ):
+        ) -> None:
         """
         Render the object in the scene using the camera parameters.
 
@@ -167,13 +196,23 @@ class Py3DVisualiser():
             cam_R (torch.tensor): The 3x3 camera rotation matrix.
             cam_T (torch.tensor): The 3x1 camera translation vector.
             intrinsic (torch.tensor): The 3x3 intrinsic matrix.
-
-        Raises:
-            NotImplementedError: If there is more than one object in the scene.
         """
         if len(self.scene_objects) > 1:
-            raise NotImplementedError('Current implementation assumes one object in the scene')
-        mesh = self.scene_objects[0]
+            verts = [mesh.verts_list()[0] for mesh in self.scene_objects]
+            faces = list()
+            # https://github.com/facebookresearch/pytorch3d/issues/208#issuecomment-632787155
+            counter = 0
+            for count, mesh in enumerate(self.scene_objects):
+                if count == 0:
+                    faces.append(mesh.faces_list()[0])
+                else:
+                    counter += verts[count-1].shape[0]
+                    faces.append(mesh.faces_list()[0] + counter)
+            vertes_merged = torch.cat(verts, dim=0)
+            faces_merged = torch.cat(faces, dim=0)
+            mesh = py3d.structures.Meshes(verts=[vertes_merged], faces=[faces_merged])
+        else:
+            mesh = self.scene_objects[0]
         mesh_textured = self.get_textured_mesh(mesh)
         lights = py3drend.PointLights(location=[[0, 0, -1]]).to(self.device)
         renderer = self.get_mesh_renderer(lights=lights)
@@ -187,5 +226,5 @@ class Py3DVisualiser():
             image_size = [[self.img_height, self.img_width]],
         ).to(self.device)
         rend = renderer(mesh_textured, cameras=cameras, lights=lights)
-        plt.imshow(rend.numpy()[0, ..., :3], alpha=0.4)
+        plt.imshow(rend.numpy()[0, ..., :3])
         plt.show()
