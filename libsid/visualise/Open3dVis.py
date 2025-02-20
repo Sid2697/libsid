@@ -44,6 +44,68 @@ class O3DVisualiser():
         self.scene_objects.append(obj_mesh)
         return obj_mesh
 
+    def add_mesh(
+            self,
+            vertices: np.ndarray,
+            faces: np.ndarray,
+            mesh_pose: Optional[np.ndarray] = np.eye(4),
+            apply_pose: bool = False,
+            verts_scale: float = 1,
+            color: Optional[List[float]] = None,
+        ) -> o3d.geometry.TriangleMesh:
+        """
+        Adds a mesh to the scene.
+
+        Args:
+        -----------
+        vertices : np.ndarray
+            A numpy array of shape (N, 3) representing the vertices of the mesh.
+        faces : np.ndarray
+            A numpy array of shape (N, 3) representing the faces of the mesh.
+        mesh_pose : np.ndarray, optional
+            A 4x4 transformation matrix representing the pose of the mesh. Default is the identity matrix.
+        apply_pose : bool, optional
+            Whether to apply the mesh_pose transformation to the mesh. Default is False.
+        verts_scale : float, optional
+            A scaling factor for the vertices. Default is 1.
+        color : Optional[List[float]], optional
+            A list of three floats representing the RGB color of the mesh. Default is None, which sets the color to [0.5, 0.5, 0.5].
+
+        Returns:
+        --------
+        o3d.geometry.TriangleMesh
+            The created TriangleMesh object.
+
+        Raises:
+        -------
+        ValueError
+            If the vertices or faces are not numpy arrays or if their shapes are not (N, 3).
+            If the mesh_pose is not a numpy array or if its shape is not (4, 4).
+        """
+        if not isinstance(vertices, np.ndarray):
+            raise ValueError(f'Expected vertices as numpy array, got {type(vertices)}')
+        if vertices.shape[1] != 3:
+            raise ValueError(f'Vertices must be Nx3, got {vertices.shape}')
+        if not isinstance(faces, np.ndarray):
+            raise ValueError(f'Expected faces as numpy array, got {type(faces)}')
+        if faces.shape[1] != 3:
+            raise ValueError(f'Faces must be Nx3, got {faces.shape}')
+        mesh = o3d.geometry.TriangleMesh()
+        mesh.vertices = o3d.utility.Vector3dVector(np.asarray(vertices) / verts_scale)
+        mesh.triangles = o3d.utility.Vector3iVector(np.asarray(faces))
+        mesh.compute_vertex_normals()
+        if color is None:
+            color = [0.5, 0.5, 0.5]
+        mesh.paint_uniform_color(color)
+        if apply_pose:
+            if not isinstance(mesh_pose, np.ndarray):
+                raise ValueError(f'Expected mesh_pose as numpy array, got {type(mesh_pose)}')
+            if mesh_pose.shape != (4, 4):
+                raise ValueError(f'Expected mesh_pose as 4x4 matrix, got {mesh_pose.shape}')
+            mesh = copy.deepcopy(mesh).transform(mesh_pose)
+        self.scene_objects.append(mesh)
+        return mesh
+
     def add_frame(
             self,
             size: float = 1,
