@@ -76,7 +76,7 @@ class Py3DVisualiser():
         mesh = py3d.structures.Meshes(
             verts=[vertices / verts_scale],
             faces=[faces],
-        )
+        ).to(self.device)
         self.scene_objects.append(mesh)
 
     def transform_obj(
@@ -226,5 +226,6 @@ class Py3DVisualiser():
             image_size = [[self.img_height, self.img_width]],
         ).to(self.device)
         rend = renderer(mesh_textured, cameras=cameras, lights=lights)
-        plt.imshow(rend.numpy()[0, ..., :3])
-        plt.show()
+        return rend.numpy()[0, ..., :3]
+        # plt.imshow(rend.numpy()[0, ..., :3])
+        # plt.show()

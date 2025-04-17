@@ -5,3 +5,4 @@ dist/
 tests/
 *.DS_Store
 demo/
+.vscode/

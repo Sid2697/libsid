@@ -139,7 +139,3 @@ transformed_rotation, transformed_translation = PyTorchOpen3D.convert_3x3(rotati
 ### Dependencies
 
 - `numpy`
-
-### License
-
-This project is licensed under the MIT License.
